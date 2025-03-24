@@ -9,13 +9,31 @@ import { TagModule } from 'primeng/tag';
 import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { Button } from 'primeng/button';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+
+interface Task {
+    id: number;
+    parentId: number | null;
+    name: string;
+    plannedEndDate: string;
+    description: string;
+    status: string;
+}
+
+interface NestedTask {
+    name: string;
+    plannedEndDate: Date;
+    description: string;
+    status: string;
+    children: NestedTask[];
+}
 
 @Component({
     selector: 'app-tree-demo',
     standalone: true,
     imports: [CommonModule, FormsModule, TreeModule, TreeTableModule, TagModule, DatePicker, Select, Button],
     template: `
-
 
         <div class="card">
             <div class="font-semibold text-xl mb-4">Tasks</div>
@@ -63,7 +81,7 @@ import { Button } from 'primeng/button';
                             </div>
 
                             <div *ngIf="i === 1" >
-                                <textarea pTextarea placeholder="Your Message" [value]="rowData[col.field]" rows="2" cols="25"></textarea>
+                                <textarea class="p-1" pTextarea placeholder="Your Message" [value]="rowData[col.field]" rows="2" cols="25"></textarea>
                             </div>
 
                             <div *ngIf="i === 2" >
@@ -94,54 +112,37 @@ import { Button } from 'primeng/button';
 export class TreeDemo implements OnInit {
 
 
-    data: any[] = [
-        {
-            name: 'Konfiguracja systemu',
-            plannedEndDate: new Date(),
-            description: 'Ogólna konfiguracja i ustawienia systemu.',
-            status: 'New',
-            children: [
-                {
-                    name: 'Instalacja środowiska',
-                    plannedEndDate: new Date(),
-                    description: 'Instalacja oraz konfiguracja niezbędnego oprogramowania.',
-                    status: 'In Progress',
-                    children: [
-                        {
-                            name: 'Negocjacja z klientem',
-                            plannedEndDate: new Date(),
-                            description: 'Omówienie warunków projektu z klientem.',
-                            status: 'Cancelled'
-                        },
-                        {
-                            name: 'Negocjacja z klientem',
-                            plannedEndDate: new Date(),
-                            description: 'Zamknięcie negocjacji i zatwierdzenie warunków.',
-                            status: 'Completed'
-                        }, 
-                        {
-                            name: 'Planowanie infrastruktury',
-                            plannedEndDate: new Date(),
-                            description: 'Przygotowanie planu infrastruktury technicznej.',
-                            status: 'In Progress'
-                        }
-                    ]
-                },
-                {
-                    name: 'Wdrażanie pracowników do systemu',
-                    plannedEndDate: new Date(),
-                    description: 'Szkolenie i wprowadzenie pracowników do nowego systemu.',
-                    status: 'In Progress'
-                },
-                {
-                    name: 'Spotkanie zarządu',
-                    plannedEndDate: new Date(),
-                    description: 'Omówienie postępów i kluczowych decyzji projektowych.',
-                    status: 'New'
+    data: any[] = [];
+
+
+    
+    transformToNested(json: Task[]): NestedTask[] {
+        const map: { [key: number]: NestedTask } = {};
+        const result: NestedTask[] = [];
+    
+        json.forEach(item => {
+            const { id, parentId, name, plannedEndDate, description, status } = item;
+            const node: NestedTask = {
+                name,
+                plannedEndDate: new Date(plannedEndDate),
+                description,
+                status,
+                children: []
+            };
+    
+            map[id] = node;
+    
+            if (parentId === null) {
+                result.push(node);
+            } else {
+                if (map[parentId]) {
+                    map[parentId].children.push(node);
                 }
-            ]
-        },
-    ]
+            }
+        });
+    
+        return result;
+    }
 
     convertTasksToUITreeForm(data: any[]) {
         return data.map(item => {
@@ -170,10 +171,20 @@ export class TreeDemo implements OnInit {
     ];
     nodeService = inject(NodeService);
 
+    httpClient = inject(HttpClient);
+
     ngOnInit() {
         
         //this.nodeService.getTreeTableNodes().then((files: any) => (this.treeTableValue = files));
-        this.treeTableValue = this.convertTasksToUITreeForm(this.data);
+        //this.treeTableValue = this.convertTasksToUITreeForm(this.data);
+
+
+        ((async () => {
+            const result = await firstValueFrom(this.httpClient.get('http://localhost:8080/all')) as Array<any>;
+            this.data = this.transformToNested(result);
+            this.treeTableValue = this.convertTasksToUITreeForm(this.data);
+        }))();
+        
 
     }
 }
