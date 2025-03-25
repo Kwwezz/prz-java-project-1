@@ -1,141 +1,134 @@
-import { Component } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { TimelineModule } from 'primeng/timeline';
 import { CardModule } from 'primeng/card';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+import { Dialog } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
+import { HttpClient } from '@angular/common/http';
+import { firstValueFrom } from 'rxjs';
+import { FormsModule } from '@angular/forms';
 
 @Component({
     selector: 'app-timeline-demo',
     standalone: true,
-    imports: [CommonModule, TimelineModule, ButtonModule, CardModule],
-    template: ` <div class="grid grid-cols-12 gap-8">
-        <div class="col-span-6">
-            <div class="card">
-                <div class="font-semibold text-xl mb-4">Left Align</div>
-                <p-timeline [value]="events1">
-                    <ng-template #content let-event>
-                        {{ event.status }}
-                    </ng-template>
-                </p-timeline>
+    imports: [TableModule, ButtonModule, Dialog, InputTextModule, FormsModule],
+    template: `
+    <div class="card">
+        <p-table [value]="customers" [tableStyle]="{ 'min-width': '50rem' }">
+        <ng-template #caption>
+            <div class="flex items-center justify-between">
+                <span class="text-xl font-bold">Customers</span>
+                <p-button (click)="newOrSelectedCustomer = { name: '', email: '' }; customerDialogVisible = true"
+                    icon="pi pi-plus" rounded raised/>
             </div>
+        </ng-template>
+        <ng-template #header>
+            <tr>
+                <th>
+                    <div class="flex items-center gap-1 ">
+                        <i class="pi pi-user"></i>
+                        <span>Name</span>
+                    </div>
+                </th>
+                <th>
+                    <div class="flex items-center gap-1">
+                        <i class="pi pi-envelope"></i>
+                        <span>Email</span>
+                    </div>
+                </th>
+                <th>
+                    <div class="flex items-center gap-1">
+                        <i class="pi pi-calendar"></i>
+                        <span>Created at</span>
+                    </div>
+                </th>
+            </tr>
+        </ng-template>
+        <ng-template #body let-customer>
+            <tr>
+                <td>{{ customer.name }}</td>
+                <td>{{ customer.email }}</td>
+                <td>{{ customer.createdAt }}</td>
+                <td>
+                    <div class="flex gap-2 p-1">
+                        <p-button (click)="deleteCustomer(customer.id)"
+                            icon="pi pi-trash" rounded severity="danger"/>
+                        <p-button (click)="newOrSelectedCustomer = customer; customerDialogVisible = true"
+                            icon="pi pi-pencil" rounded severity="warn"/>
+                    </div>
+                </td>
+            </tr>
+        </ng-template>
+        </p-table>
+    </div>
+    <p-dialog 
+        header="Edit Customer" [modal]="true" [style]="{ width: '25rem' }"
+        [(visible)]="customerDialogVisible" >
+        <div class="flex items-center gap-2 mb-4">
+            <i class="pi pi-user"></i>
+            <label for="name" class="font-semibold w-24">Name</label>
+            <input [(ngModel)]="newOrSelectedCustomer.name"
+                pInputText id="name" class="flex-auto" autocomplete="off" />
         </div>
-        <div class="col-span-6">
-            <div class="card">
-                <div class="font-semibold text-xl mb-4">Right Align</div>
-                <p-timeline [value]="events1" align="right">
-                    <ng-template #content let-event>
-                        {{ event.status }}
-                    </ng-template>
-                </p-timeline>
-            </div>
+        <div class="flex items-center gap-2 mb-8">
+            <i class="pi pi-envelope"></i>
+            <label for="email" class="font-semibold w-24">Email</label>
+            <input [(ngModel)]="newOrSelectedCustomer.email"
+                pInputText id="email" class="flex-auto" autocomplete="off" />
         </div>
-        <div class="col-span-6">
-            <div class="card">
-                <div class="font-semibold text-xl mb-4">Alternate Align</div>
-                <p-timeline [value]="events1" align="alternate">
-                    <ng-template #content let-event>
-                        {{ event.status }}
-                    </ng-template>
-                </p-timeline>
-            </div>
+        <div class="flex justify-end gap-2">
+            <p-button label="Cancel" severity="secondary" (click)="customerDialogVisible = false" />
+            <p-button label="Save" (click)="saveCustomer(); customerDialogVisible = false" />
         </div>
-        <div class="col-span-6">
-            <div class="card">
-                <div class="font-semibold text-xl mb-4">Opposite Content</div>
-                <p-timeline [value]="events1">
-                    <ng-template #content let-event>
-                        <small class="p-text-secondary">{{ event.date }}</small>
-                    </ng-template>
-                    <ng-template #opposite let-event>
-                        {{ event.status }}
-                    </ng-template>
-                </p-timeline>
-            </div>
-        </div>
-        <div class="col-span-full">
-            <div class="card">
-                <div class="font-semibold text-xl mb-4">Templating</div>
-                <p-timeline [value]="events1" align="alternate" styleClass="customized-timeline">
-                    <ng-template #marker let-event>
-                        <span class="flex w-8 h-8 items-center justify-center text-white rounded-full z-10 shadow-sm" [style]="{ 'background-color': event.color }">
-                            <i [class]="event.icon"></i>
-                        </span>
-                    </ng-template>
-                    <ng-template #content let-event>
-                        <p-card [header]="event.status" [subheader]="event.date">
-                            <img *ngIf="event.image" [src]="'https://primefaces.org/cdn/primeng/images/demo/product/' + event.image" [alt]="event.name" width="200" class="shadow" />
-                            <p>
-                                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Inventore sed consequuntur error repudiandae numquam deserunt quisquam repellat libero asperiores earum nam nobis, culpa ratione quam perferendis esse,
-                                cupiditate neque quas!
-                            </p>
-                            <p-button label="Read more" [text]="true" />
-                        </p-card>
-                    </ng-template>
-                </p-timeline>
-            </div>
-        </div>
-        <div class="col-span-full">
-            <div class="card">
-                <div class="font-semibold text-xl mb-4">Horizontal</div>
-                <div class="font-semibold mb-2">Top Align</div>
-                <p-timeline [value]="events2" layout="horizontal" align="top">
-                    <ng-template #content let-event>
-                        {{ event }}
-                    </ng-template>
-                </p-timeline>
-
-                <div class="font-semibold mt-4 mb-2">Bottom Align</div>
-                <p-timeline [value]="events2" layout="horizontal" align="bottom">
-                    <ng-template #content let-event>
-                        {{ event }}
-                    </ng-template>
-                </p-timeline>
-
-                <div class="font-semibold mt-4 mb-2">Alternate Align</div>
-                <p-timeline [value]="events2" layout="horizontal" align="alternate">
-                    <ng-template #content let-event>
-                        {{ event }}
-                    </ng-template>
-                    <ng-template #opposite let-event> &nbsp; </ng-template>
-                </p-timeline>
-            </div>
-        </div>
-    </div>`
+    </p-dialog>
+    `
 })
 export class TimelineDemo {
-    events1: any[] = [];
 
-    events2: any[] = [];
+    httpClient = inject(HttpClient);
 
-    ngOnInit() {
-        this.events1 = [
-            {
-                status: 'Ordered',
-                date: '15/10/2020 10:30',
-                icon: 'pi pi-shopping-cart',
-                color: '#9C27B0',
-                image: 'game-controller.jpg'
-            },
-            {
-                status: 'Processing',
-                date: '15/10/2020 14:00',
-                icon: 'pi pi-cog',
-                color: '#673AB7'
-            },
-            {
-                status: 'Shipped',
-                date: '15/10/2020 16:15',
-                icon: 'pi pi-envelope',
-                color: '#FF9800'
-            },
-            {
-                status: 'Delivered',
-                date: '16/10/2020 10:00',
-                icon: 'pi pi-check',
-                color: '#607D8B'
-            }
-        ];
+    customerDialogVisible = false;
 
-        this.events2 = ['2020', '2021', '2022', '2023'];
+    customers: Array<any> = []
+
+    newOrSelectedCustomer = { name: '', email: '' };
+
+    async loadCustomers() {
+        this.customers = await firstValueFrom(
+            this.httpClient.get<Array<any>>('http://localhost:8080/customers')
+        );
+
+        for (const customer of this.customers) {
+            const date = new Date(customer.createdAt);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+            const formattedDate = `${day}.${month}.${year} ${hours}:${minutes}:${seconds}`;
+            customer.createdAt = formattedDate;
+        }
+    }
+
+    async saveCustomer() {
+        const result = await firstValueFrom(
+            this.httpClient.post('http://localhost:8080/customer', this.newOrSelectedCustomer)
+        );
+        this.loadCustomers();
+    }
+
+    async deleteCustomer(id: number) {
+        const result = await firstValueFrom(
+            this.httpClient.delete(`http://localhost:8080/customer/${id}`)
+        );
+        this.loadCustomers();
+    }
+
+    
+    async ngOnInit() {
+        this.loadCustomers();
     }
 }
