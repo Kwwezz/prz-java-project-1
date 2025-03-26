@@ -9,49 +9,28 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.backend.interfaces.Customer;
+import com.example.backend.interfaces.Task;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-
-class Customer {
-    public int id;
-    public String name;
-    public String email;
-    public String createdAt;
-	public String updatedAt;
-}
-
-class Task {
-    public int id;
-	public Integer parentId;
-	public int customerId;
-    public String name;
-	public String description;
-	public String plannedEndDate;
-	public String status;
-    public String createdAt;
-	public String updatedAt;
-}
 
 @CrossOrigin(origins = "http://localhost:4200")
 @RestController
 public class BackendController {
 
 
-	// Customer
-	// id name createdAt, updatedAt
+	private final BackendCustomerService backendCustomerService;
+	private final BackendTaskService backendTaskService;
 
-
-	// Tasks
-	// id parentId customerId name description plannedEndDate status: (New, In Progress, Completed Cancelled) createdAt, updatedAt
-	//
-
-
-	private final BackendDatabaseService backendDatabaseService;
-
-	public BackendController(BackendDatabaseService backendDatabaseService) {
-		this.backendDatabaseService = backendDatabaseService;
+	public BackendController(
+		BackendCustomerService backendCustomerService,
+		BackendTaskService backendTaskService
+	) {
+		this.backendCustomerService = backendCustomerService;
+		this.backendTaskService = backendTaskService;
 	}
 
 	@GetMapping("/")
@@ -63,19 +42,19 @@ public class BackendController {
 
 	@GetMapping("/tasks")
 	public List<Map<String, Object>> getTasks() {
-		return backendDatabaseService.getTasks();
+		return backendTaskService.getTasks();
 	}
 
 	@GetMapping("/tasks/{customerId}")
 	public List<Map<String, Object>> getTasksForCustomerId(@PathVariable("customerId") int customerId) {
-		return backendDatabaseService.getTasksForCustomerId(customerId);
+		return backendTaskService.getTasksForCustomerId(customerId);
 	}
 
 
 	@PostMapping("/task")
 	public Map<String, String> saveTask(@RequestBody Task task) {
 		Map<String, String> response = new HashMap<String, String>();
-		backendDatabaseService.saveTask(task);
+		backendTaskService.saveTask(task);
 		response.put("message", "ok");
 		return response;
 	}
@@ -83,7 +62,7 @@ public class BackendController {
 	@DeleteMapping("/task/{id}")
 	public Map<String, String> deleteTask(@PathVariable("id") int id) {
 		Map<String, String> response = new HashMap<String, String>();
-		backendDatabaseService.deleteTask(id);
+		backendTaskService.deleteTask(id);
 		response.put("message", "ok");
 		return response;
 	}
@@ -91,13 +70,13 @@ public class BackendController {
 
 	@GetMapping("/customers")
 	public List<Map<String, Object>> getCustomers() {
-		return backendDatabaseService.getCustomers();
+		return backendCustomerService.getCustomers();
 	}
 
 	@PostMapping("/customer")
 	public Map<String, String> saveCustomer(@RequestBody Customer customer) {
 		Map<String, String> response = new HashMap<String, String>();
-		backendDatabaseService.saveCustomer(customer);
+		backendCustomerService.saveCustomer(customer);
 		response.put("message", "ok");
 		return response;
 	}
@@ -105,7 +84,7 @@ public class BackendController {
 	@DeleteMapping("/customer/{id}")
 	public Map<String, String> deleteCustomer(@PathVariable("id") int id) {
 		Map<String, String> response = new HashMap<String, String>();
-		backendDatabaseService.deleteCustomer(id);
+		backendCustomerService.deleteCustomer(id);
 		response.put("message", "ok");
 		return response;
 	}
