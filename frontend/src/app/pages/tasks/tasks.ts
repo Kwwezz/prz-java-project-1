@@ -15,10 +15,11 @@ import { Toast, ToastModule } from 'primeng/toast';
 
 
 
-interface Task {
+export interface Task {
     id: number | null;
     parentId: number | null;
     customerId: number | null;
+    customerName?: string;
     name: string;
     description: string;
     plannedEndDate: string | Date | null;
@@ -39,7 +40,7 @@ interface NestedTask {
 }
 
 @Component({
-    selector: 'app-tree-demo',
+    selector: 'app-tasks',
     standalone: true,
     imports: [CommonModule, FormsModule, TreeModule, TreeTableModule, TagModule, DatePicker, Select, Button, ToastModule],
     template: `
@@ -133,7 +134,7 @@ interface NestedTask {
     `,
     providers: [NodeService, MessageService]
 })
-export class TreeDemo implements OnInit {
+export class Tasks implements OnInit {
 
     nodeService = inject(NodeService);
     messageService = inject(MessageService);

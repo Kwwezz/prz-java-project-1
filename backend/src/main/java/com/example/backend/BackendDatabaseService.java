@@ -20,6 +20,13 @@ public class BackendDatabaseService {
     }
 
 
+    public List<Map<String, Object>> getTasks() {
+        String selectSqlQuery = """
+            SELECT * FROM Tasks;
+        """;
+        return jdbcTemplate.queryForList(selectSqlQuery);
+    }
+
     public List<Map<String, Object>> getTasksForCustomerId(int id) {
         String selectSqlQuery = """
             SELECT * FROM Tasks
@@ -28,17 +35,6 @@ public class BackendDatabaseService {
         return jdbcTemplate.queryForList(selectSqlQuery, id);
     }
 
-    // class Task {
-    //     public int id;
-    //     public int parentId;
-    //     public int customerId;
-    //     public String name;
-    //     public String description;
-    //     public String plannedEndDate;
-    //     public String status;
-    //     public String createdAt;
-    //     public String updatedAt;
-    // }
 
     public int saveTask(Task task) {
 

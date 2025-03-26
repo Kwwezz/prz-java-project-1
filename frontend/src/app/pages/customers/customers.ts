@@ -10,8 +10,17 @@ import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
+
+export interface Customer { 
+    id: number;
+    name: string;
+    email: string;
+    createdAt: string;
+    updatedAt: string;
+}
+
 @Component({
-    selector: 'app-timeline-demo',
+    selector: 'app-customers',
     standalone: true,
     imports: [TableModule, ButtonModule, Dialog, InputTextModule, FormsModule],
     template: `
@@ -85,19 +94,19 @@ import { FormsModule } from '@angular/forms';
     </p-dialog>
     `
 })
-export class TimelineDemo {
+export class Customers {
 
     httpClient = inject(HttpClient);
 
     customerDialogVisible = false;
 
-    customers: Array<any> = []
+    customers: Array<Customer> = []
 
     newOrSelectedCustomer = { name: '', email: '' };
 
     async loadCustomers() {
         this.customers = await firstValueFrom(
-            this.httpClient.get<Array<any>>('http://localhost:8080/customers')
+            this.httpClient.get<Array<Customer>>('http://localhost:8080/customers')
         );
 
         for (const customer of this.customers) {

@@ -61,15 +61,20 @@ public class BackendController {
 		return response;
 	}
 
+	@GetMapping("/tasks")
+	public List<Map<String, Object>> getTasks() {
+		return backendDatabaseService.getTasks();
+	}
+
 	@GetMapping("/tasks/{customerId}")
 	public List<Map<String, Object>> getTasksForCustomerId(@PathVariable("customerId") int customerId) {
 		return backendDatabaseService.getTasksForCustomerId(customerId);
 	}
 
+
 	@PostMapping("/task")
 	public Map<String, String> saveTask(@RequestBody Task task) {
 		Map<String, String> response = new HashMap<String, String>();
-
 		backendDatabaseService.saveTask(task);
 		response.put("message", "ok");
 		return response;
